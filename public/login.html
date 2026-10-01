@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>login</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="login-body">
+  <form class="login" method="POST" action="/login" autocomplete="off">
+    <h1>panel</h1>
+    <input type="text" name="user" placeholder="user" autocomplete="username" required />
+    <input type="password" name="password" placeholder="password" autocomplete="current-password" required />
+    <button type="submit">log in</button>
+    <p class="err" id="err"></p>
+  </form>
+  <script>
+    if (new URLSearchParams(location.search).get('e')) {
+      document.getElementById('err').textContent = 'invalid credentials';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>panel</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>panel</h1>
+    <span id="count" class="count"></span>
+    <a class="logout" href="/logout">logout</a>
+  </header>
+
+  <section class="bulk">
+    <input id="bulk-cmd" type="text" placeholder="command for many…" autocomplete="off" maxlength="4096" />
+    <button data-scope="online">queue online</button>
+    <button data-scope="offline">queue offline</button>
+    <button data-scope="all">queue all</button>
+    <span id="bulk-msg" class="msg"></span>
+  </section>
+
+  <section class="filters">
+    <button data-filter="all" class="active">all</button>
+    <button data-filter="online">online</button>
+    <button data-filter="offline">offline</button>
+  </section>
+
+  <table id="clients">
+    <thead>
+      <tr>
+        <th>name</th>
+        <th>ip</th>
+        <th>state</th>
+        <th>last seen</th>
+        <th>command</th>
+        <th>queue</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <p id="empty" class="empty">no clients</p>
+
+  <script src="/app.js"></script>
+</body>
+</html>
