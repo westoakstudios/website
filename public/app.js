@@ -1,4 +1,4 @@
-
+// language: JavaScript, file: public/app.js
 const POLL_MS = 3000;
 const tbody = document.querySelector('#clients tbody');
 const table = document.querySelector('#clients');
@@ -6,8 +6,12 @@ const empty = document.querySelector('#empty');
 const count = document.querySelector('#count');
 const bulkCmd = document.querySelector('#bulk-cmd');
 const bulkMsg = document.querySelector('#bulk-msg');
+const amountInput = document.querySelector('#amount');
+const sendBtn = document.querySelector('#send');
 
 let filter = 'all';
+let targetOf = 'all';
+let targetMode = 'all';
 let snapshot = [];
 
 function ago(ts) {
@@ -194,21 +198,57 @@ document.querySelectorAll('.filters button').forEach((b) => {
   });
 });
 
-document.querySelectorAll('.bulk button').forEach((b) => {
-  b.addEventListener('click', async () => {
-    const cmd = bulkCmd.value.trim();
-    if (!cmd) return;
-    const scope = b.dataset.scope;
-    b.disabled = true;
-    try {
-      const r = await post('/queue-all', { scope, cmd });
-      bulkMsg.textContent = r ? `queued to ${r.queued} client(s)` : 'failed';
-      if (r) bulkCmd.value = '';
-    } finally {
-      b.disabled = false;
-      poll();
+document.querySelectorAll('.targeting .seg button').forEach((b) => {
+  b.addEventListener('click', () => {
+    const group = b.closest('.seg');
+    group.querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    if (group.dataset.role === 'of') targetOf = b.dataset.of;
+    if (group.dataset.role === 'mode') {
+      targetMode = b.dataset.mode;
+      amountInput.disabled = targetMode === 'all';
+      if (targetMode === 'all') amountInput.value = '';
+      if (targetMode === 'percent' && !amountInput.value) amountInput.value = 50;
+      if (targetMode === 'count' && !amountInput.value) amountInput.value = 100;
     }
   });
+});
+
+// tag the seg groups so the click handler can tell them apart
+document.querySelectorAll('.targeting .seg').forEach((g, i) => {
+  g.dataset.role = i === 0 ? 'of' : 'mode';
+});
+
+sendBtn.addEventListener('click', async () => {
+  const cmd = bulkCmd.value.trim();
+  if (!cmd) return;
+
+  let target;
+  if (targetMode === 'all') {
+    target = targetOf;
+  } else {
+    const n = Number(amountInput.value);
+    if (!Number.isFinite(n) || n <= 0) {
+      bulkMsg.textContent = 'enter a number';
+      return;
+    }
+    target = targetMode === 'percent'
+      ? { percent: n, of: targetOf }
+      : { count: n, of: targetOf };
+  }
+
+  sendBtn.disabled = true;
+  try {
+    const r = await post('/queue-all', { target, cmd });
+    if (r) {
+      bulkMsg.textContent = `queued to ${r.queued} of ${r.pool} (${r.scope})`;
+      bulkCmd.value = '';
+    } else {
+      bulkMsg.textContent = 'failed';
+    }
+  } finally {
+    sendBtn.disabled = false;
+    poll();
+  }
 });
 
 poll();

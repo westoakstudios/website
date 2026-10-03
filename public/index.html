@@ -13,11 +13,24 @@
     <a class="logout" href="/logout">logout</a>
   </header>
 
-  <section class="bulk">
-    <input id="bulk-cmd" type="text" placeholder="command for many…" autocomplete="off" maxlength="4096" />
-    <button data-scope="online">queue online</button>
-    <button data-scope="offline">queue offline</button>
-    <button data-scope="all">queue all</button>
+  <section class="targeting">
+    <div class="seg" role="tablist" aria-label="scope">
+      <button data-of="all" class="active">all</button>
+      <button data-of="online">online</button>
+      <button data-of="offline">offline</button>
+    </div>
+
+    <div class="seg" role="tablist" aria-label="mode">
+      <button data-mode="all" class="active">everyone</button>
+      <button data-mode="percent">%</button>
+      <button data-mode="count">#</button>
+    </div>
+
+    <input id="amount" type="number" min="0" placeholder="60" disabled />
+
+    <input id="bulk-cmd" type="text" placeholder="command…" autocomplete="off" maxlength="4096" />
+
+    <button id="send" class="primary">send</button>
     <span id="bulk-msg" class="msg"></span>
   </section>
 

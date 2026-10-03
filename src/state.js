@@ -1,5 +1,5 @@
-
-import { randomBytes } from 'node:crypto';
+// language: JavaScript, file: src/state.js
+import { randomBytes, randomInt } from 'node:crypto';
 import { config } from './config.js';
 
 const clients = new Map();
@@ -43,12 +43,53 @@ export function enqueue(ip, cmd) {
   return true;
 }
 
-export function enqueueScope(scope, cmd) {
-  const targets = [...clients.values()].filter((c) =>
+function poolByScope(scope) {
+  return [...clients.values()].filter((c) =>
     scope === 'all' ? true : scope === 'online' ? c.online : !c.online,
   );
-  for (const c of targets) c.queue.push({ id: makeId(), cmd });
-  return targets.length;
+}
+
+// partial Fisher–Yates: pick `k` random entries without full shuffle
+function sample(arr, k) {
+  if (k >= arr.length) return arr;
+  const out = arr.slice();
+  for (let i = 0; i < k; i++) {
+    const j = i + randomInt(i, out.length);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out.slice(0, k);
+}
+
+export function enqueueTarget(target, cmd) {
+  let scope = 'all';
+  let mode = 'all';
+  let amount = 0;
+
+  if (typeof target === 'string') {
+    scope = target;
+  } else if (target && typeof target === 'object') {
+    scope = target.of === 'online' || target.of === 'offline' ? target.of : 'all';
+    if (typeof target.percent === 'number') {
+      mode = 'percent';
+      amount = Math.max(0, Math.min(100, Math.floor(target.percent)));
+    } else if (typeof target.count === 'number') {
+      mode = 'count';
+      amount = Math.max(0, Math.floor(target.count));
+    }
+  }
+
+  const pool = poolByScope(scope);
+
+  let chosen = pool;
+  if (mode === 'percent') {
+    const n = Math.floor((pool.length * amount) / 100);
+    chosen = sample(pool, n);
+  } else if (mode === 'count') {
+    chosen = sample(pool, Math.min(amount, pool.length));
+  }
+
+  for (const c of chosen) c.queue.push({ id: makeId(), cmd });
+  return { queued: chosen.length, pool: pool.length, scope, mode, amount };
 }
 
 export function cancel(ip, id) {
