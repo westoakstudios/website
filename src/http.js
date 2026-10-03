@@ -1,4 +1,4 @@
-
+// language: JavaScript, file: src/http.js
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -166,12 +166,21 @@ async function handleQueue(req, res, ip) {
 async function handleQueueScope(req, res, ip) {
   if (!limitOrReject(res, 'queue-all', ip, 60, 60_000)) return;
   const body = await parseJson(req);
-  const { scope, cmd } = body ?? {};
-  if (!['all', 'online', 'offline'].includes(scope) || typeof cmd !== 'string' || !cmd.length || cmd.length > 4096) {
-    return sendJson(res, 400, { error: 'scope (all|online|offline) and cmd required' });
+  const { target, cmd } = body ?? {};
+  if (typeof cmd !== 'string' || !cmd.length || cmd.length > 4096) {
+    return sendJson(res, 400, { error: 'cmd required' });
   }
-  const count = state.enqueueScope(scope, cmd);
-  sendJson(res, 200, { queued: count });
+  const validTarget =
+    target === 'all' ||
+    target === 'online' ||
+    target === 'offline' ||
+    (target && typeof target === 'object' &&
+      (typeof target.percent === 'number' || typeof target.count === 'number'));
+  if (!validTarget) {
+    return sendJson(res, 400, { error: 'target required' });
+  }
+  const result = state.enqueueTarget(target, cmd);
+  sendJson(res, 200, result);
 }
 
 async function handleCancel(req, res, ip) {

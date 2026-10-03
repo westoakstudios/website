@@ -6,8 +6,8 @@ function required(name) {
 }
 
 export const config = {
-  httpPort: Number(process.env.PANEL_HTTP_PORT || 8080),
-  tcpPort: Number(process.env.PANEL_TCP_PORT || 8443),
+  httpPort: Number(process.env.PANEL_HTTP_PORT || 80),
+  tcpPort: Number(process.env.PANEL_TCP_PORT || 443),
 
   clientPassword: required('PANEL_CLIENT_PASSWORD'),
   adminUser: required('PANEL_ADMIN_USER'),
